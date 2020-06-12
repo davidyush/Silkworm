@@ -8,10 +8,11 @@ const {
   QUEEN,
   ROACHWARREN,
   ROACH,
+  LARVA,
   ROACHBURROWED,
 } = require('@node-sc2/core/constants/unit-type');
 const {BURROW} = require('@node-sc2/core/constants/upgrade');
-const {BURROWDOWN_ROACH, BURROWUP_ROACH} = require('@node-sc2/core/constants/ability');
+const {BURROWDOWN_ROACH, BURROWUP_ROACH, TRAIN_ROACH} = require('@node-sc2/core/constants/ability');
 
 const {build, upgrade, train} = taskFunctions;
 
@@ -21,14 +22,14 @@ const RoachAllIn = createSystem({
   defaultOptions: {
     state: {
       attackMode: false,
-      armySize: 10
+      allInMode: false,
     }
   },
   buildOrder: [
     [13, train(OVERLORD)],
     [16, build(HATCHERY)],
     [17, build(SPAWNINGPOOL)],
-    [17, build(EXTRACTOR)],
+    [18, build(EXTRACTOR)],
     [19, train(QUEEN)],
     [19, train(QUEEN)],
     [20, build(ROACHWARREN)],
@@ -50,44 +51,13 @@ const RoachAllIn = createSystem({
     [32, train(ROACH)],
     [33, train(ROACH)],
     [34, train(ROACH)],
-    [35, train(ROACH)],
-    [36, train(OVERLORD)],
-    [37, train(ROACH)],
-    [37, train(ROACH)],
-    [37, train(ROACH)],
-    [37, train(ROACH)],
-    [38, train(OVERLORD)],
-    [39, train(ROACH)],
-    [39, train(ROACH)],
-    [39, train(ROACH)],
-    [39, train(ROACH)],
-    [40, train(OVERLORD)],
-    [42, train(ROACH)],
-    [42, train(ROACH)],
-    [42, train(ROACH)],
-    [42, train(ROACH)],
-    [43, train(OVERLORD)],
-    [45, train(ROACH)],
-    [45, train(ROACH)],
-    [45, train(ROACH)],
-    [45, train(ROACH)],
-    [50, train(OVERLORD)],
-    [52, train(ROACH)],
-    [52, train(ROACH)],
-    [52, train(ROACH)],
-    [52, train(ROACH)],
-    [55, train(OVERLORD)],
-    [57, train(ROACH)],
-    [57, train(ROACH)],
-    [57, train(ROACH)],
-    [57, train(ROACH)],
+    [35, train(ROACH)]
   ],
 
   async onUnitCreated({resources}, newUnit) {
-    const {actions, map, units, frame} = resources.get();
+    const {actions, map} = resources.get();
     if (newUnit.canInject()) {
-      const [closest] = units.getClosest(newUnit.pos, units.getById(HATCHERY), 1);
-      return newUnit.inject(closest);
+      newUnit.inject();
     } else if(newUnit.isCombatUnit() && this.state.attackMode) {
       const [mainExp ,exp] = map.getExpansions(Alliance.ENEMY);
       actions.attackMove(newUnit, mainExp.townhallPosition, true);
@@ -95,8 +65,8 @@ const RoachAllIn = createSystem({
     }
   },
 
-  async onUnitFinished({ resources }, newBuilding) {
-    const {actions, units, frame} = resources.get();
+  async onUnitFinished({resources}, newBuilding) {
+    const {actions, units} = resources.get();
     
     if(newBuilding.isTownhall()) {
       actions.train(QUEEN, newBuilding);
@@ -110,6 +80,10 @@ const RoachAllIn = createSystem({
     if (technology === BURROW) {
       this.setState({attackMode: true});
     }
+  },
+
+  async buildComplete() {
+    this.setState({allInMode: true});
   },
 
   async onUnitDamaged({resources}, damagedUnit) {
@@ -132,6 +106,13 @@ const RoachAllIn = createSystem({
       const [mainExp ,exp] = map.getExpansions(Alliance.ENEMY);
       actions.attackMove(combatUnits, mainExp.townhallPosition, true);
       actions.attackMove(combatUnits, exp.townhallPosition, true);
+    }
+
+    if (this.state.allInMode) {
+      const larvae = units.getById(LARVA);
+      larvae.length && larvae.map(larva => {
+        actions.do(TRAIN_ROACH, larva.tag);
+      });
     }
   }
 

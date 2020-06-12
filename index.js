@@ -5,6 +5,7 @@ const {OVERLORD} = require('@node-sc2/core/constants/unit-type');
 const RoachAllIn = require('./builds/RoachAllIn');
 const Mining = require('./helpers/Mining');
 const Combat = require('./helpers/Combat');
+const OverlordMaker = require('./helpers/OverlordsMaker');
 
 function createBot() {
   const bot = createAgent({
@@ -20,9 +21,10 @@ function createBot() {
     }
   });
 
-  bot.use(RoachAllIn);
+  bot.use(OverlordMaker);
   bot.use(Mining);
   bot.use(Combat);
+  bot.use(RoachAllIn);
 
   return bot;
 }

@@ -3,12 +3,16 @@
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
-  "dependencies": {},
+  "dependencies": {
+    "@node-sc2/core": "^0.9.0-alpha.5"
+  },
   "devDependencies": {},
   "scripts": {
     "start": "node index.js"
   },
-  "keywords": ["sc2bot"],
-  "author": "",
+  "keywords": [
+    "sc2bot"
+  ],
+  "author": "fleple",
   "license": "ISC"
 }
